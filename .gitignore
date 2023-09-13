@@ -1,0 +1,7 @@
+# logs
+/stacktrace.log
+/logs
+build/
+.gradle
+.DS_Store
+.idea/
