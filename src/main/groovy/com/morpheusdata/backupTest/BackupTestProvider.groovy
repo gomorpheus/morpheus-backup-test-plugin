@@ -102,33 +102,33 @@ class BackupTestProvider extends AbstractBackupProvider {
 		)
 		optionTypes << new OptionType(
 			code:"backupProviderType.backupTest.serviceToken", inputType:OptionType.InputType.PASSWORD, name:'password', category:"backupProviderType.backupTest",
-			fieldName:'serviceToken', fieldCode: 'gomorpheus.optiontype.ApiToken', fieldLabel:'API Token', fieldContext:'domain', fieldGroup:'default',
+			fieldName:'serviceToken', fieldCode:'gomorpheus.optiontype.ApiToken', fieldLabel:'API Token', fieldContext:'domain', fieldGroup:'default',
 			required:false, enabled:true, requireOnCode:'credential.type:local', editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
 			displayOrder:30, fieldClass:null, localCredential:true
 		)
 		optionTypes << new OptionType(
 			code:"backupProviderType.backupTest.username", inputType:OptionType.InputType.TEXT, name:'username', category:"backupProviderType.backupTest",
-			fieldName:'username', fieldCode: 'gomorpheus.optiontype.Username', fieldLabel:'Username', fieldContext:'domain', fieldGroup:'default',
+			fieldName:'username', fieldCode:'gomorpheus.optiontype.Username', fieldLabel:'Username', fieldContext:'domain', fieldGroup:'default',
 			required:false, enabled:true, requireOnCode:'credential.type:local', editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
 			displayOrder:31, fieldClass:null, localCredential:true
 		)
 		optionTypes << new OptionType(
 			code:"backupProviderType.backupTest.password", inputType:OptionType.InputType.PASSWORD, name:'password', category:"backupProviderType.backupTest",
-			fieldName:'password', fieldCode: 'gomorpheus.optiontype.Password', fieldLabel:'Password', fieldContext:'domain', fieldGroup:'default',
+			fieldName:'password', fieldCode:'gomorpheus.optiontype.Password', fieldLabel:'Password', fieldContext:'domain', fieldGroup:'default',
 			required:false, enabled:true, requireOnCode:'credential.type:local', editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
 			displayOrder:32, fieldClass:null, localCredential:true
 		)
 
 		optionTypes << new OptionType(
 			code:"backupProviderType.backupTest.input1", inputType:OptionType.InputType.TEXT, name:'input1', category:"backupProviderType.backupTest",
-			fieldName:'input1', fieldCode: 'morpheusdata.optiontype.input1', fieldLabel:'Input 1', fieldContext:'config', fieldGroup:'default',
+			fieldName:'input1', fieldCode:'morpheusdata.backupTest.inputOne', fieldLabel:'Input 1', fieldContext:'config', fieldGroup:'default',
 			required:true, enabled:true, editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
 			displayOrder:40, fieldClass:null
 		)
 
 		optionTypes << new OptionType(
 			code:"backupProviderType.backupTest.input2", inputType:OptionType.InputType.TEXT, name:'input2', category:"backupProviderType.backupTest",
-			fieldName:'input2', fieldCode: 'morpheusdata.optiontype.input2', fieldLabel:'Input 2', fieldContext:'config', fieldGroup:'default',
+			fieldName:'input2', fieldCode:'morpheusdata.backupTest.inputTwo', fieldLabel:'Input 2', fieldContext:'config', fieldGroup:'default',
 			required:true, enabled:true, editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
 			displayOrder:45, fieldClass:null
 		)
@@ -167,7 +167,7 @@ class BackupTestProvider extends AbstractBackupProvider {
 
 		optionTypes << new OptionType(
 			code:"backup.backupTest.foo", inputType:OptionType.InputType.TEXT, name:'foo', category:"backup.backupTest",
-			fieldName:'foo', fieldCode: 'morpheusdata.backupTest.foo', fieldLabel:'Foo', fieldContext:'config', fieldGroup:'default',
+			fieldName:'foo', fieldCode: 'morpheusdata.backupTest.foo', fieldLabel:'Foo', fieldContext:'backup.config', fieldGroup:'default',
 			required:true, enabled:true, editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
 			displayOrder:10, fieldClass:null
 		)

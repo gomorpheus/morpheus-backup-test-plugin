@@ -5,6 +5,8 @@ import com.morpheusdata.core.Plugin
 import com.morpheusdata.core.backup.AbstractBackupTypeProvider
 import com.morpheusdata.core.backup.BackupExecutionProvider
 import com.morpheusdata.core.backup.BackupRestoreProvider
+import com.morpheusdata.core.backup.response.BackupExecutionResponse
+import com.morpheusdata.core.backup.util.BackupStatusUtility
 import com.morpheusdata.model.Backup
 import com.morpheusdata.model.BackupProvider
 import com.morpheusdata.model.BackupRestore
@@ -96,8 +98,8 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 		log.debug("configureBackup")
 		log.debug("config: ${config}")
 		log.debug("opts: ${opts}")
-		backup.setConfigProperty("color", config.config.color)
-		backup.setConfigProperty("foo", config.config.foo)
+		backup.setConfigProperty("color", config?.config?.color)
+		backup.setConfigProperty("foo", config?.config?.foo)
 		return ServiceResponse.success()
 	}
 
@@ -116,12 +118,15 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 	ServiceResponse createBackup(Backup backup, Map opts) {
 		log.debug("createBackup")
 		BackupProvider backupProvider = backup.backupProvider
+		log.debug("backupProvider.name: ${backupProvider.name} ")
 		log.debug("backupProvider.credentials, username: ${backupProvider.credentialData?.username}, pass: ${backupProvider.credentialData?.password} ")
 		log.debug("backupProvider.username: ${backupProvider.username}")
 		log.debug("backupProvider.pass: ${backupProvider.password}")
 		log.debug("backupProvider.serviceToken: ${backupProvider.serviceToken}")
 		log.debug("backupProvider.config.input1: ${backupProvider.getConfigProperty("input1")}")
 		log.debug("backupProvider.config.input2: ${backupProvider.getConfigProperty("input2")}")
+		log.debug("opts color: ${opts?.config?.color}")
+		log.debug("opts foo: ${opts?.config?.foo}")
 
 		return ServiceResponse.success()
 	}
@@ -149,13 +154,25 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 	}
 
 	@Override
-	ServiceResponse executeBackup(Backup backup, BackupResult backupResult, Map executionConfig, Cloud cloud, ComputeServer computeServer, Map opts) {
-		return ServiceResponse.success()
+	ServiceResponse<BackupExecutionResponse> executeBackup(Backup backup, BackupResult backupResult, Map executionConfig, Cloud cloud, ComputeServer computeServer, Map opts) {
+		ServiceResponse<BackupExecutionResponse> rtn = ServiceResponse.prepare(new BackupExecutionResponse(backupResult))
+
+		rtn.data.updates = true
+		rtn.data.backupResult.status = BackupStatusUtility.SUCCEEDED
+		rtn.success = true
+
+		return rtn
 	}
 
 	@Override
-		ServiceResponse refreshBackupResult(BackupResult backupResult) {
-		return ServiceResponse.success()
+	ServiceResponse<BackupExecutionResponse> refreshBackupResult(BackupResult backupResult) {
+		ServiceResponse<BackupExecutionResponse> rtn = ServiceResponse.prepare(new BackupExecutionResponse(backupResult))
+
+		rtn.data.updates = true
+		rtn.data.backupResult.status = BackupStatusUtility.SUCCEEDED
+		rtn.success = true
+
+		return rtn
 	}
 
 	@Override
