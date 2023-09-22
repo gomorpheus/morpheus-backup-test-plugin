@@ -171,6 +171,13 @@ class BackupTestProvider extends AbstractBackupProvider {
 			required:true, enabled:true, editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
 			displayOrder:10, fieldClass:null
 		)
+		
+		optionTypes << new OptionType(
+			code:"backup.backupTest.numbers", inputType:OptionType.InputType.RADIO, name:'Numbers', category:"backup.backupTest", optionSource:"numberOptions",
+			fieldName:'numbers', fieldCode: 'morpheusdata.backupTest.numbers', fieldLabel:'Numbers', fieldContext:'backup.config', fieldGroup:'default',
+			required:false, enabled:true, editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
+			displayOrder:10, fieldClass:null, visibleOnCode: "backup.backupTest.color"
+		)
 
 		return optionTypes
 	}

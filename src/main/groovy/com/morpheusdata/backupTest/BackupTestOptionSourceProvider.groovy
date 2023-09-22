@@ -39,7 +39,7 @@ class BackupTestOptionSourceProvider implements OptionSourceProvider {
 
 	@Override
 	List<String> getMethodNames() {
-		return new ArrayList<String>(['colorOptions'])
+		return new ArrayList<String>(['colorOptions', 'numberOptions'])
 	}
 
 	def colorOptions(args) {
@@ -48,6 +48,15 @@ class BackupTestOptionSourceProvider implements OptionSourceProvider {
 			[name: "Red", value: "red"],
 			[name: "Green", value: "green"],
 			[name: "Blue", value: "blue"]
+		]
+	}
+
+	def numberOptions(args) {
+		log.debug("Backup Test Number Options")
+		return [
+			[name: "One", value: "one"],
+			[name: "Two", value: "two"],
+			[name: "Three", value: "three"]
 		]
 	}
 }

@@ -7,11 +7,13 @@ import com.morpheusdata.core.backup.BackupExecutionProvider
 import com.morpheusdata.core.backup.BackupRestoreProvider
 import com.morpheusdata.core.backup.response.BackupExecutionResponse
 import com.morpheusdata.core.backup.util.BackupStatusUtility
+import com.morpheusdata.core.backup.response.BackupRestoreResponse
 import com.morpheusdata.model.Backup
 import com.morpheusdata.model.BackupProvider
 import com.morpheusdata.model.BackupRestore
 import com.morpheusdata.model.BackupResult
 import com.morpheusdata.model.Cloud
+import com.morpheusdata.model.Workload
 import com.morpheusdata.model.ComputeServer
 import com.morpheusdata.model.Instance
 import com.morpheusdata.model.OptionType
@@ -80,7 +82,7 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 
 	@Override
 	String getRestoreNewMode() {
-		return "VM"
+		return "VM_RESTORE"
 	}
 
 	@Override
@@ -137,7 +139,7 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 	}
 
 	@Override
-	ServiceResponse deleteBackupResult(BackupResult backupResultModel, Map opts) {
+	ServiceResponse deleteBackupResult(BackupResult backupResult, Map opts) {
 		ServiceResponse rtn = ServiceResponse.prepare()
 		rtn.msg = "Unable to delete backup result"
 		return rtn
@@ -149,7 +151,7 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 	}
 
 	@Override
-	ServiceResponse prepareBackupResult(BackupResult backupResultModel, Map opts) {
+	ServiceResponse prepareBackupResult(BackupResult backupResult, Map opts) {
 		return ServiceResponse.success()
 	}
 
@@ -176,28 +178,30 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 	}
 
 	@Override
-	ServiceResponse cancelBackup(BackupResult backupResultModel, Map opts) {
+	ServiceResponse cancelBackup(BackupResult backupResult, Map opts) {
 		return ServiceResponse.success()
 	}
 
 	@Override
-	ServiceResponse extractBackup(BackupResult backupResultModel, Map opts) {
+	ServiceResponse extractBackup(BackupResult backupResult, Map opts) {
 		return ServiceResponse.success()
 	}
 
 	// Backup Restore
 	@Override
-	ServiceResponse configureRestoreBackup(BackupResult backupResultModel, Map config, Map opts) {
+	ServiceResponse configureRestoreBackup(BackupResult backupResult, Map config, Map opts) {
 		return ServiceResponse.success()
 	}
 
 	@Override
-	ServiceResponse getBackupRestoreInstanceConfig(BackupResult backupResultModel, Instance instanceModel, Map restoreConfig, Map opts) {
+	ServiceResponse getBackupRestoreInstanceConfig(BackupResult backupResult, Instance instance, Map restoreConfig, Map opts) {
+		log.debug("getBackupRestoreInstanceConfig - backupResult: $backupResult, instance: $instance, restoreConfig: $restoreConfig, opts: $opts")
+
 		return ServiceResponse.success()
 	}
 
 	@Override
-	ServiceResponse validateRestoreBackup(BackupResult backupResultModel, Map opts) {
+	ServiceResponse validateRestoreBackup(BackupResult backupResult, Map opts) {
 		return ServiceResponse.success()
 	}
 
@@ -207,12 +211,80 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 	}
 
 	@Override
-	ServiceResponse restoreBackup(BackupRestore backupRestore, BackupResult backupResultModel, Backup backup, Map opts) {
-		return ServiceResponse.success()
+	ServiceResponse<BackupRestoreResponse> restoreBackup(BackupRestore backupRestore, BackupResult backupResult, Backup backup, Map opts) {
+		log.debug("restoreBackup - backupRestore: $backupRestore, backupResult: $backupResult, backup: $backup ")
+		backupRestore.setConfigProperty("restoreResult1", "foo")
+		backupRestore.setConfigProperty("restoreResult2", "bar")
+		backupRestore.status = BackupStatusUtility.IN_PROGRESS
+		
+		log.debug("backupRestore restoreToNew: ${backupRestore.restoreToNew}")
+		if(backupRestore.restoreToNew == true) {
+			
+			//
+			// do some external restor operation
+			// 
+			
+			log.debug("Restore to new instance")
+			backupRestore.setConfigProperty("externalVmId", java.util.UUID.randomUUID())
+		} else {
+			// restore to existing
+		}
+		
+		BackupRestoreResponse restoreResponse = new BackupRestoreResponse(backupRestore)
+		restoreResponse.updates = true
+		ServiceResponse rtn = ServiceResponse.prepare(restoreResponse)
+		rtn.success = true
+		
+		return rtn
 	}
 
 	@Override
-	ServiceResponse refreshBackupRestoreResult(BackupRestore backupRestoreModel, BackupResult backupResultModel) {
-		return ServiceResponse.success()
+	ServiceResponse refreshBackupRestoreResult(BackupRestore backupRestore, BackupResult backupResult) {
+		log.debug("refreshBackupRestoreResult - backupRestore: $backupRestore, backupResult: $backupResult ")
+		def result1 = backupRestore.getConfigProperty("restoreResult1")
+		def result2 = backupRestore.getConfigProperty("restoreResult2")
+		log.debug("configProperties - result1: $result1, result2: $result2")
+		
+		String vmExternalId = backupRestore.getConfigProperty("externalVmId")
+
+		log.debug("backupRestore restoreToNew: ${backupRestore.restoreToNew}")
+		if(backupRestore.restoreToNew == true && vmExternalId) {
+			log.debug("Restore to new instance")
+			Workload workload = morpheus.workload.get(backupRestore.containerId).blockingGet()
+			ComputeServer server = workload.server
+			
+
+			
+			server.status = Workload.Status.running
+			server.externalId = vmExternalId //vm.MOR.val
+			server.internalId = vmExternalId //vm.config?.instanceUuid
+			server.uniqueId = vmExternalId //vm.config?.uuid
+			morpheus.computeServer.save([server]).blockingGet()
+		} else {
+			// restore to existing
+		}
+		
+		if(restoreFailed) {
+			Instance instance = workload.instance
+			instance.status = Instance.Status.failed
+			morpheus.instance.save([instance])
+		}
+	
+		BackupRestoreResponse restoreResponse = new BackupRestoreResponse(backupRestore)
+		
+		def startTime = backupRestore.dateCreated.getTime()
+		def currTime = new Date().getTime()
+		def totalTime = currTime - startTime
+		log.debug("elapsed backup time: $totalTime, totalTime > threshold: ${totalTime > 180000l}")
+		if(totalTime > 180000l) {
+			restoreResponse.backupRestore.status = BackupStatusUtility.SUCCEEDED
+			restoreResponse.updates = true
+		}
+		
+		log.debug("Backup restore status: ${restoreResponse.backupRestore.status}")
+		ServiceResponse rtn = ServiceResponse.prepare(restoreResponse)
+		rtn.success = true
+		
+		return rtn
 	}
 }
