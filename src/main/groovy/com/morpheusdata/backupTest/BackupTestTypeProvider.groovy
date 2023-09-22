@@ -263,12 +263,12 @@ class BackupTestTypeProvider extends AbstractBackupTypeProvider {
 		} else {
 			// restore to existing
 		}
-		
-		if(restoreFailed) {
-			Instance instance = workload.instance
-			instance.status = Instance.Status.failed
-			morpheus.instance.save([instance])
-		}
+		//
+		// if(restoreFailed) {
+		// 	Instance instance = workload.instance
+		// 	instance.status = Instance.Status.failed
+		// 	morpheus.instance.save([instance])
+		// }
 	
 		BackupRestoreResponse restoreResponse = new BackupRestoreResponse(backupRestore)
 		
