@@ -1,3 +1,1 @@
-include 'src:main:main'
-findProject(':src:main:main')?.name = 'main'
-
+rootProject.name = 'morpheus-backup-test-plugin'

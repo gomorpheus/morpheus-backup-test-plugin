@@ -12,6 +12,10 @@ import com.morpheusdata.model.BackupProviderType
 import com.morpheusdata.model.Icon
 import com.morpheusdata.model.OptionType
 import com.morpheusdata.response.ServiceResponse
+import com.morpheusdata.views.HTMLResponse
+import com.morpheusdata.views.HandlebarsRenderer
+import com.morpheusdata.views.Renderer
+import com.morpheusdata.views.ViewModel
 import groovy.util.logging.Slf4j
 import groovy.json.JsonOutput
 import com.morpheusdata.core.util.ConnectionUtils
@@ -23,6 +27,10 @@ import com.morpheusdata.core.util.ConnectionUtils
 @Slf4j
 class BackupTestProvider extends AbstractBackupProvider {
 
+	private HandlebarsRenderer renderer
+
+	public static final String PROVIDER_CODE = 'backup-test'
+
 	BackupTestProvider(Plugin plugin, MorpheusContext morpheusContext) {
 		super(plugin, morpheusContext)
 
@@ -32,11 +40,13 @@ class BackupTestProvider extends AbstractBackupProvider {
 		addScopedProvider(backupTypeProvider, "manual", null)
 		addScopedProvider(backupTypeProvider, "openstack", null)
 		addScopedProvider(backupTypeProvider, "vmware", null)
+
+		plugin.registerProvider(new BackupTestTabProvider(plugin, morpheus))
 	}
 
 	@Override
 	String getCode() {
-		return 'backup-test'
+		return PROVIDER_CODE
 	}
 
 	@Override
@@ -77,13 +87,13 @@ class BackupTestProvider extends AbstractBackupProvider {
 	public Boolean getHasSchedule() { return false; }
 
 	@Override
-	public Boolean getHasJobs() { return true; }
+	public Boolean getHasJobs() { return false; }
 
 	@Override
 	public String getDefaultJobType() { return "create"; }
 
 	@Override
-	public Boolean getHasRetentionCount() { return true; }
+	public Boolean getHasRetentionCount() { return false; }
 
 	@Override
 	Collection<OptionType> getOptionTypes() {
@@ -117,6 +127,13 @@ class BackupTestProvider extends AbstractBackupProvider {
 			fieldName:'password', fieldCode:'gomorpheus.optiontype.Password', fieldLabel:'Password', fieldContext:'domain', fieldGroup:'default',
 			required:false, enabled:true, requireOnCode:'credential.type:local', editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
 			displayOrder:32, fieldClass:null, localCredential:true
+		)
+
+		optionTypes << new OptionType(
+			code:"backupProviderType.backupTest.overrideView", inputType:OptionType.InputType.CHECKBOX, name:'overrideView', category:"backupProviderType.backupTest",
+			fieldName:'overrideView', fieldCode:'morpheusdata.backupTest.overrideView', fieldLabel:'Override Integration View', fieldContext:'config', fieldGroup:'default',
+			required:false, enabled:true, editable:true, global:false, placeHolder:null, helpBlock:'', defaultValue:null, custom:false,
+			displayOrder:38, fieldClass:null
 		)
 
 		optionTypes << new OptionType(
@@ -217,5 +234,31 @@ class BackupTestProvider extends AbstractBackupProvider {
 	@Override
 	ServiceResponse refresh(BackupProviderModel backupProviderModel) {
 		return ServiceResponse.success()
+	}
+
+	@Override
+
+	@Override
+	HTMLResponse renderTemplate(com.morpheusdata.model.BackupProvider backupProvider) {
+		if(!backupProvider.getConfigProperty("overrideView")) {
+			return null
+		}
+		ViewModel<com.morpheusdata.model.BackupProvider> model = new ViewModel<>()
+		model.object = backupProvider
+
+		return getRenderer().renderTemplate("hbs/backupTestProviderView", model);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	Renderer<?> getRenderer() {
+		if(renderer == null) {
+			renderer = new HandlebarsRenderer("renderer", getPlugin().getClassLoader());
+			renderer.registerAssetHelper(getPlugin().getName());
+			renderer.registerNonceHelper(getMorpheus().getWebRequest());
+			renderer.registerI18nHelper(getPlugin(),getMorpheus());
+		}
+		return renderer;
 	}
 }
